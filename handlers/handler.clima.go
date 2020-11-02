@@ -10,8 +10,6 @@ import (
 	"so2-clima/providers"
 )
 
-var c *providers.AccuweatherClientWrapper
-
 // HandleGetTemperature handles getting the temperature
 func HandleGetTemperature(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
@@ -20,6 +18,19 @@ func HandleGetTemperature(w http.ResponseWriter, r *http.Request) {
 	lat := r.URL.Query()["lat"]
 	lon := r.URL.Query()["lon"]
 
+	geo := getGeoposition(lat, lon)
+
+	provider := providers.NewDistributedWeatherProvider(ctx)
+
+	clima, err := provider.GetTemperatureDataByGeolocation(geo)
+	if err != nil {
+		json.NewEncoder(w).Encode("")
+	}
+
+	json.NewEncoder(w).Encode(clima)
+}
+
+func getGeoposition(lat []string, lon []string) *client.Geoposition {
 	geo := client.Geoposition{}
 
 	if lat != nil {
@@ -34,26 +45,5 @@ func HandleGetTemperature(w http.ResponseWriter, r *http.Request) {
 		geo.Longitude = constants.DEFAULT_LONGITUDE
 	}
 
-	c = providers.NewAccuweatherClient()
-
-	clima, err := getLocationTemperatureFromAccuweatherAPI(ctx, &geo)
-	if err != nil {
-		json.NewEncoder(w).Encode("")
-	}
-
-	json.NewEncoder(w).Encode(clima)
-}
-
-func getLocationTemperatureFromAccuweatherAPI(ctx context.Context, geo *client.Geoposition) (*providers.AccuweatherCurrentWeather, error) {
-	city, err := c.GetAccuweatherCityByGeoposition(ctx, geo)
-	if err != nil {
-		return nil, err
-	}
-
-	clima, err := c.GetAccuweatherCurrentWeatherByCityKey(ctx, city.Key)
-	if err != nil {
-		return nil, err
-	}
-
-	return clima, nil
+	return &geo
 }
