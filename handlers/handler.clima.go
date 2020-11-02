@@ -22,10 +22,7 @@ func HandleGetTemperature(w http.ResponseWriter, r *http.Request) {
 
 	provider := providers.NewDistributedWeatherProvider(ctx)
 
-	clima, err := provider.GetTemperatureDataByGeolocation(geo)
-	if err != nil {
-		json.NewEncoder(w).Encode("")
-	}
+	clima := provider.GetTemperatureDataByGeolocation(geo)
 
 	json.NewEncoder(w).Encode(clima)
 }

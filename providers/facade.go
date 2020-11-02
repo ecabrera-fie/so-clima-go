@@ -21,16 +21,42 @@ func NewDistributedWeatherProvider(ctx context.Context) *ProvidersFacade {
 	}
 }
 
-func (p *ProvidersFacade) GetTemperatureDataByGeolocation(geo *client.Geoposition) (models.Temperatura, error) {
-	accu, _ := p.getLocationTemperatureFromAccuweatherAPI(geo)
-	open, _ := p.openweathermapProvider.GetOpenweatherMapWeather(p.Context, geo)
+func (p *ProvidersFacade) GetTemperatureDataByGeolocation(geo *client.Geoposition) models.Response {
+	var sumTemp float64
+	var tempData []float64
 
-	temp := models.Temperatura{
-		TemperaturaPromedio: (accu.Temperature.Metric.Value + open.Main.Temp) / 2,
-		DesviacionEstandar:  utils.StandardDeviation(accu.Temperature.Metric.Value, open.Main.Temp),
+	response := models.Response{
+		Status: "OK",
+		Errors: []models.ErrorPayload{},
 	}
 
-	return temp, nil
+	accu, err := p.getLocationTemperatureFromAccuweatherAPI(geo)
+	if err != nil {
+		response.Status = "WARNING"
+		response.Errors = append(response.Errors, models.ErrorPayload{Detail: err.Error()})
+	} else {
+		tempData = append(tempData, accu.Temperature.Metric.Value)
+		sumTemp += accu.Temperature.Metric.Value
+	}
+	open, err := p.openweathermapProvider.GetOpenweatherMapWeather(p.Context, geo)
+	if err != nil {
+		response.Status = "ERROR"
+		response.Errors = append(response.Errors, models.ErrorPayload{Detail: err.Error()})
+	} else {
+		tempData = append(tempData, open.Main.Temp)
+		sumTemp += open.Main.Temp
+	}
+
+	if response.Status != "ERROR" {
+		temp := models.Temperatura{
+			TemperaturaPromedio: sumTemp / 2,
+			DesviacionEstandar:  utils.StandardDeviation(tempData),
+		}
+
+		response.Payload = temp
+	}
+
+	return response
 }
 
 func (p *ProvidersFacade) getLocationTemperatureFromAccuweatherAPI(geo *client.Geoposition) (*AccuweatherCurrentWeather, error) {
