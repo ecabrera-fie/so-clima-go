@@ -72,7 +72,7 @@ type AccuweatherCity struct {
 	DataSets []string `json:"DataSets"`
 }
 
-type AccuweatherCurrentWeather []struct {
+type AccuweatherCurrentWeather struct {
 	LocalObservationDateTime string      `json:"LocalObservationDateTime"`
 	EpochTime                int         `json:"EpochTime"`
 	WeatherText              string      `json:"WeatherText"`
@@ -126,6 +126,7 @@ func (acw *AccuweatherClientWrapper) GetAccuweatherCityByGeoposition(ctx context
 
 // GetAccuweatherCurrentWeatherByCityKey A partir de una clave de ciudad, obtiene el clima
 func (acw *AccuweatherClientWrapper) GetAccuweatherCurrentWeatherByCityKey(ctx context.Context, key string) (*AccuweatherCurrentWeather, error) {
+	var res []AccuweatherCurrentWeather
 	req, err := http.NewRequest("GET", fmt.Sprintf("%s/currentconditions/v1/%s?apikey=%s", acw.C.BaseURL, key, acw.C.ApiKey), nil)
 	if err != nil {
 		return nil, err
@@ -133,11 +134,9 @@ func (acw *AccuweatherClientWrapper) GetAccuweatherCurrentWeatherByCityKey(ctx c
 
 	req = req.WithContext(ctx)
 
-	res := AccuweatherCurrentWeather{}
-
 	if err := acw.C.SendRequest(req, &res); err != nil {
 		return nil, err
 	}
 
-	return &res, nil
+	return &res[0], nil
 }
