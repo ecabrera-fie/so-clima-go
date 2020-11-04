@@ -49,7 +49,7 @@ func (p *ProvidersFacade) GetTemperatureDataByGeolocation(geo *client.Geopositio
 
 	if response.Status != "ERROR" {
 		temp := models.Temperatura{
-			TemperaturaPromedio: sumTemp / 2,
+			TemperaturaPromedio: sumTemp / float64(len(tempData)),
 			DesviacionEstandar:  utils.StandardDeviation(tempData),
 		}
 
