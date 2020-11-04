@@ -33,8 +33,8 @@ type errorResponse struct {
 }
 
 func (c *Client) SendRequest(req *http.Request, v interface{}) error {
-	req.Header.Set("Content-Type", "application/json; charset=utf-8")
-	req.Header.Set("Accept", "application/json; charset=utf-8")
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
 
 	client := &http.Client{}
 	res, err := client.Do(req)
