@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"errors"
 	"math"
 )
 
@@ -21,4 +22,34 @@ func StandardDeviation(data []float64) float64 {
 	sd = math.Sqrt(sd / 10)
 
 	return sd
+}
+
+func Min(values []float64) (min float64, e error) {
+	if len(values) == 0 {
+		return 0, errors.New("cannot detect a minimum value in an empty slice")
+	}
+
+	min = values[0]
+	for _, v := range values {
+		if v < min {
+			min = v
+		}
+	}
+
+	return min, nil
+}
+
+func Max(values []float64) (max float64, e error) {
+	if len(values) == 0 {
+		return 0, errors.New("cannot detect a maximum value in an empty slice")
+	}
+
+	max = values[0]
+	for _, v := range values {
+		if v > max {
+			max = v
+		}
+	}
+
+	return max, nil
 }
