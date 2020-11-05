@@ -36,16 +36,12 @@ func (p *ProvidersFacade) GetTemperatureDataByGeolocation(geo *client.Geopositio
 	var tempData []float64
 	var providers []models.WeatherProvider
 
-	response := models.Response{
-		Status: OK_STATUS,
-	}
+	response := models.Response{}
 
 	provider := models.WeatherProvider{ Name: p.accuweatherProvider.C.Name, Status: ONLINE_STATUS }
 	accu, err := p.getLocationTemperatureFromAccuweatherAPI(geo)
 	if err != nil {
-		response.Status = WARNING_STATUS
-		provider.Status = OFFLINE_STATUS
-		provider.Error = err.Error()
+		setError(&provider, err)
 	} else {
 		tempData = append(tempData, accu.Temperature.Metric.Value)
 		sumTemp += accu.Temperature.Metric.Value
@@ -55,9 +51,7 @@ func (p *ProvidersFacade) GetTemperatureDataByGeolocation(geo *client.Geopositio
 	provider = models.WeatherProvider{ Name: p.openweathermapProvider.C.Name, Status: ONLINE_STATUS }
 	open, err := p.openweathermapProvider.GetOpenweatherMapWeather(p.Context, geo)
 	if err != nil {
-		response.Status = WARNING_STATUS
-		provider.Status = OFFLINE_STATUS
-		provider.Error = err.Error()
+		setError(&provider, err)
 	} else {
 		tempData = append(tempData, open.Main.Temp)
 		sumTemp += open.Main.Temp
@@ -67,19 +61,7 @@ func (p *ProvidersFacade) GetTemperatureDataByGeolocation(geo *client.Geopositio
 	provider = models.WeatherProvider{ Name: p.openweathermapProvider.C.Name, Status: ONLINE_STATUS }
 	cells, err := p.climacellProvider.GetClimacellWeatherCells(p.Context, geo)
 	if err != nil {
-		countErrors := 0
-		for _, weatherProvider := range providers {
-			if weatherProvider.Status != ONLINE_STATUS {
-				countErrors++
-			}
-		}
-		if countErrors == len(providers) {
-			response.Status = ERROR_STATUS
-		} else {
-			response.Status = WARNING_STATUS
-		}
-		provider.Status = OFFLINE_STATUS
-		provider.Error = err.Error()
+		setError(&provider, err)
 	} else {
 		for _, cell := range *cells {
 			tempData = append(tempData, cell.Temp.Value)
@@ -87,6 +69,20 @@ func (p *ProvidersFacade) GetTemperatureDataByGeolocation(geo *client.Geopositio
 		}
 	}
 	providers = append(providers, provider)
+
+	okCount := 0
+	for _, weatherProvider := range providers {
+		if weatherProvider.Status == ONLINE_STATUS {
+			okCount++
+		}
+	}
+	if okCount == len(providers) {
+		response.Status = OK_STATUS
+	} else if okCount == 0 {
+		response.Status = ERROR_STATUS
+	} else {
+		response.Status = WARNING_STATUS
+	}
 
 	mintemp, _ := utils.Min(tempData)
 	maxtemp, _ := utils.Max(tempData)
@@ -99,7 +95,6 @@ func (p *ProvidersFacade) GetTemperatureDataByGeolocation(geo *client.Geopositio
 			MaxTemp: maxtemp,
 			MinTemp: mintemp,
 		}
-
 		response.Payload = weather
 	}
 
@@ -118,4 +113,9 @@ func (p *ProvidersFacade) getLocationTemperatureFromAccuweatherAPI(geo *client.G
 	}
 
 	return clima, nil
+}
+
+func setError(provider *models.WeatherProvider, err error)  {
+	provider.Status = OFFLINE_STATUS
+	provider.Error = err.Error()
 }
