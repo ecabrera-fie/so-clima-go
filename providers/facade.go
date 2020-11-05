@@ -19,6 +19,7 @@ type ProvidersFacade struct {
 	Context                context.Context
 	accuweatherProvider    *AccuweatherClientWrapper
 	openweathermapProvider *OpenweatherClientWrapper
+	climacellProvider *ClimacellClientWrapper
 }
 
 func NewDistributedWeatherProvider(ctx context.Context) *ProvidersFacade {
@@ -26,6 +27,7 @@ func NewDistributedWeatherProvider(ctx context.Context) *ProvidersFacade {
 		Context:                ctx,
 		accuweatherProvider:    NewAccuweatherClient(),
 		openweathermapProvider: NewOpenweatherMapClient(),
+		climacellProvider: NewClimacellClient(),
 	}
 }
 
@@ -36,7 +38,6 @@ func (p *ProvidersFacade) GetTemperatureDataByGeolocation(geo *client.Geopositio
 
 	response := models.Response{
 		Status: OK_STATUS,
-		Errors: []models.ErrorPayload{},
 	}
 
 	provider := models.WeatherProvider{ Name: p.accuweatherProvider.C.Name, Status: ONLINE_STATUS }
@@ -44,7 +45,7 @@ func (p *ProvidersFacade) GetTemperatureDataByGeolocation(geo *client.Geopositio
 	if err != nil {
 		response.Status = WARNING_STATUS
 		provider.Status = OFFLINE_STATUS
-		response.Errors = append(response.Errors, models.ErrorPayload{Detail: err.Error()})
+		provider.Error = err.Error()
 	} else {
 		tempData = append(tempData, accu.Temperature.Metric.Value)
 		sumTemp += accu.Temperature.Metric.Value
@@ -54,12 +55,36 @@ func (p *ProvidersFacade) GetTemperatureDataByGeolocation(geo *client.Geopositio
 	provider = models.WeatherProvider{ Name: p.openweathermapProvider.C.Name, Status: ONLINE_STATUS }
 	open, err := p.openweathermapProvider.GetOpenweatherMapWeather(p.Context, geo)
 	if err != nil {
-		response.Status = ERROR_STATUS
+		response.Status = WARNING_STATUS
 		provider.Status = OFFLINE_STATUS
-		response.Errors = append(response.Errors, models.ErrorPayload{Detail: err.Error()})
+		provider.Error = err.Error()
 	} else {
 		tempData = append(tempData, open.Main.Temp)
 		sumTemp += open.Main.Temp
+	}
+	providers = append(providers, provider)
+
+	provider = models.WeatherProvider{ Name: p.openweathermapProvider.C.Name, Status: ONLINE_STATUS }
+	cells, err := p.climacellProvider.GetClimacellWeatherCells(p.Context, geo)
+	if err != nil {
+		countErrors := 0
+		for _, weatherProvider := range providers {
+			if weatherProvider.Status != ONLINE_STATUS {
+				countErrors++
+			}
+		}
+		if countErrors == len(providers) {
+			response.Status = ERROR_STATUS
+		} else {
+			response.Status = WARNING_STATUS
+		}
+		provider.Status = OFFLINE_STATUS
+		provider.Error = err.Error()
+	} else {
+		for _, cell := range *cells {
+			tempData = append(tempData, cell.Temp.Value)
+			sumTemp += cell.Temp.Value
+		}
 	}
 	providers = append(providers, provider)
 
