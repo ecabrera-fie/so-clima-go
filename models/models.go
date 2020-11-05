@@ -3,11 +3,6 @@ package models
 type Response struct {
 	Status  string         `json:"status"`
 	Payload interface{}    `json:"payload"`
-	Errors  []ErrorPayload `json:"errors"`
-}
-
-type ErrorPayload struct {
-	Detail string
 }
 
 type Weather struct {
@@ -21,4 +16,5 @@ type Weather struct {
 type WeatherProvider struct {
 	Name   string `json:"nombre"`
 	Status string `json:"estado"`
+	Error string `json:"error"`
 }
