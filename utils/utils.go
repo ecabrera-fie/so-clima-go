@@ -2,7 +2,6 @@ package utils
 
 import (
 	"errors"
-	"fmt"
 	"math"
 	"sort"
 )
@@ -69,13 +68,11 @@ func EnhancedTempCalculation(listTemp []float64) (float64, float64, int) {
 		sum += listTemp[i]
 	}
 	media = sum / float64(tam)
-	fmt.Println("La media es : ", media)
 	//saca la desviacion estandar
 	for j := 0; j < tam; j++ {
 		desvEst += math.Pow(listTemp[j]-media, 2)
 	}
 	desvEst = math.Sqrt(desvEst / float64(tam))
-	fmt.Println("La desviacion estandar es : ", desvEst)
 	sort.Float64s(listTemp)
 
 	//dividir la lista en dos para sacar la mediana
@@ -95,8 +92,6 @@ func EnhancedTempCalculation(listTemp []float64) (float64, float64, int) {
 	// sacar los valores minimos y maximos aceptables con el Test de Tukey
 	minAccept = mediana1 - 1.5*(mediana2-mediana1)
 	maxAccept = mediana2 + 1.5*(mediana2-mediana1)
-	fmt.Println("El minimo aceptable es : ", minAccept)
-	fmt.Println("El maximo aceptable es : ", maxAccept)
 	for i := 0; i < tam; i++ {
 		if listTemp[i] > minAccept && listTemp[i] < maxAccept {
 			listTempProm = append(listTempProm, listTemp[i])
@@ -106,13 +101,12 @@ func EnhancedTempCalculation(listTemp []float64) (float64, float64, int) {
 		}
 	}
 	avg = sumAvg / float64(len(listTempProm))
-	fmt.Println("La temperatura es : ", avg)
 	//saca la desviacion estandar despues de evaluar
 	desvEst = 0
 	for j := 0; j < len(listTempProm); j++ {
 		desvEst += math.Pow(listTempProm[j]-avg, 2)
 	}
 	desvEst = math.Sqrt(desvEst / float64(len(listTempProm)))
-	fmt.Println("La desviacion estandar es : ", desvEst)
+
 	return desvEst, avg, removed
 }

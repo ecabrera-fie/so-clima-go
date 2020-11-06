@@ -84,6 +84,7 @@ func (p *ProvidersFacade) GetTemperatureDataByGeolocation(geo *client.Geopositio
 			MaxTemp:             maxtemp,
 			MinTemp:             mintemp,
 			SensorsDesestimated: rem,
+			KnownTotalSensors:   len(tempData),
 		}
 		response.Payload = weather
 	}

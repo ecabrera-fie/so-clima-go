@@ -11,6 +11,7 @@ type Weather struct {
 	MinTemp             float64           `json:"temperaturaMinima"`
 	MaxTemp             float64           `json:"temperaturaMaxima"`
 	SensorsDesestimated int               `json:"sensoresDescartados"`
+	KnownTotalSensors   int               `json:"cantSensoresConocidos"`
 	WeatherProviders    []WeatherProvider `json:"proveedores"`
 }
 
