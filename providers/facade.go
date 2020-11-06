@@ -12,10 +12,10 @@ var waitGroup sync.WaitGroup
 
 const (
 	OFFLINE_STATUS = "OFFLINE"
-	ONLINE_STATUS = "ONLINE"
-	ERROR_STATUS = "ERROR"
+	ONLINE_STATUS  = "ONLINE"
+	ERROR_STATUS   = "ERROR"
 	WARNING_STATUS = "WARNING"
-	OK_STATUS = "OK"
+	OK_STATUS      = "OK"
 )
 
 type standardWeatherInfo struct {
@@ -26,7 +26,7 @@ type ProvidersFacade struct {
 	Context                context.Context
 	accuweatherProvider    *AccuweatherClientWrapper
 	openweathermapProvider *OpenweatherClientWrapper
-	climacellProvider *ClimacellClientWrapper
+	climacellProvider      *ClimacellClientWrapper
 }
 
 func NewDistributedWeatherProvider(ctx context.Context) *ProvidersFacade {
@@ -34,7 +34,7 @@ func NewDistributedWeatherProvider(ctx context.Context) *ProvidersFacade {
 		Context:                ctx,
 		accuweatherProvider:    NewAccuweatherClient(),
 		openweathermapProvider: NewOpenweatherMapClient(),
-		climacellProvider: NewClimacellClient(),
+		climacellProvider:      NewClimacellClient(),
 	}
 }
 
@@ -53,13 +53,13 @@ func (p *ProvidersFacade) GetTemperatureDataByGeolocation(geo *client.Geopositio
 		close(channel)
 	}()
 
-	accuProvider := models.WeatherProvider{ Name: p.accuweatherProvider.C.Name, Status: ONLINE_STATUS }
+	accuProvider := models.WeatherProvider{Name: p.accuweatherProvider.C.Name, Status: ONLINE_STATUS}
 	go getLocationTemperatureFromAccuweatherAPI(p.Context, geo, &accuProvider, channel, p.accuweatherProvider)
 
-	openProvider := models.WeatherProvider{ Name: p.openweathermapProvider.C.Name, Status: ONLINE_STATUS }
+	openProvider := models.WeatherProvider{Name: p.openweathermapProvider.C.Name, Status: ONLINE_STATUS}
 	go getWeatherFromOpenWeatherAPI(p.Context, geo, &openProvider, channel, p.openweathermapProvider)
 
-	climacellProvider := models.WeatherProvider{ Name: p.climacellProvider.C.Name, Status: ONLINE_STATUS }
+	climacellProvider := models.WeatherProvider{Name: p.climacellProvider.C.Name, Status: ONLINE_STATUS}
 	go getWeatherFromClimacellAPI(p.Context, geo, &climacellProvider, channel, p.climacellProvider)
 
 	for weatherInfo := range channel {
@@ -74,13 +74,16 @@ func (p *ProvidersFacade) GetTemperatureDataByGeolocation(geo *client.Geopositio
 	mintemp, _ := utils.Min(tempData)
 	maxtemp, _ := utils.Max(tempData)
 
+	desv, tmp, rem := utils.EnhancedTempCalculation(tempData)
+
 	if response.Status != ERROR_STATUS {
 		weather := models.Weather{
-			MeanTemp:          sumTemp / float64(len(tempData)),
-			StandardDeviation: utils.StandardDeviation(tempData),
-			WeatherProviders: providers,
-			MaxTemp: maxtemp,
-			MinTemp: mintemp,
+			MeanTemp:            tmp,
+			StandardDeviation:   desv,
+			WeatherProviders:    providers,
+			MaxTemp:             maxtemp,
+			MinTemp:             mintemp,
+			SensorsDesestimated: rem,
 		}
 		response.Payload = weather
 	}
@@ -137,7 +140,7 @@ func getWeatherFromClimacellAPI(ctx context.Context, geo *client.Geoposition, pr
 	}
 }
 
-func setError(provider *models.WeatherProvider, err error)  {
+func setError(provider *models.WeatherProvider, err error) {
 	provider.Status = OFFLINE_STATUS
 	provider.Error = err.Error()
 }

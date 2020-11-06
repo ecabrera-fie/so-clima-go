@@ -13,8 +13,8 @@ const (
 	OPENWEATHER_API_KEY   = "00977c7d211ee45e86b31104fd2d822f"
 	OPENWEATHER_BASE_PATH = "http://api.openweathermap.org/data/2.5"
 
-	WEATHERBIT_API_NAME  = "WeatherBit"
-	WEATHERBIT_API_KEY   = "93f35f3bd7454f2b90c41bd3fbf55233"
+	WEATHERBIT_API_NAME = "WeatherBit"
+	WEATHERBIT_API_KEY  = "93f35f3bd7454f2b90c41bd3fbf55233"
 	WEATHERBIT_API_PATH = "http://api.weatherbit.io/v2.0"
 
 	DEFAULT_LATITUDE  = "-34.6083"
