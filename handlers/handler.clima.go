@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"so2-clima/client"
-	"so2-clima/constants"
-	"so2-clima/providers"
+	"../client"
+	"../constants"
+	"../providers"
 )
 
 // HandleGetTemperature handles getting the temperature

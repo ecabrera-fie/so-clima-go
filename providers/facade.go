@@ -2,10 +2,11 @@ package providers
 
 import (
 	"context"
-	"so2-clima/client"
-	"so2-clima/models"
-	"so2-clima/utils"
 	"sync"
+
+	"../client"
+	"../models"
+	"../utils"
 )
 
 var waitGroup sync.WaitGroup

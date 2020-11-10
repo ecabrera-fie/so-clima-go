@@ -4,8 +4,9 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"so2-clima/client"
-	"so2-clima/constants"
+
+	"../client"
+	"../constants"
 )
 
 type ClimacellCell struct {

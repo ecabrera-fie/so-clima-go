@@ -6,7 +6,7 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"so2-clima/handlers"
+	"./handlers"
 )
 
 func main() {
